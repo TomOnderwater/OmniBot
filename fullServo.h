@@ -9,13 +9,14 @@ class fullServo
   public:
   fullServo(byte s_pin, byte f_pin, int t);
   void setKp(float _Kp);
-  void rotate(int degree);
+  void rotateTo(int degree);
   void setAccuracy(int _treshold);
   int Angle();
   void feedback();
   int getfPin();
   void write(int val);
   int move();
+  void getDiagnostics(char * deBuff);
   
   private:
   byte fpin;

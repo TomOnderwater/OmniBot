@@ -94,13 +94,6 @@ void fullServo::moveToTarget()
 {
   int diff = angle - target;
 
-//  Serial.print("target: ");
-//  Serial.print(target);
-//  Serial.print(" angle: ");
-//  Serial.print(angle);
-//  Serial.print(" diff: ");
-//  Serial.println(diff);
-
   if (abs(diff) < treshold)
   {
     parallax.write(90); // no movement
@@ -123,12 +116,20 @@ void fullServo::moveToTarget()
   }
 }
 
+void fullServo::getDiagnostics(char * deBuff)
+{
+   strcat(deBuff, "target: ");
+   itoa(target, (char *) &deBuff + strlen(deBuff), 10);
+   strcat(deBuff, " angle: ");
+   itoa(angle, (char *) &deBuff + strlen(deBuff), 10);
+   strcat(deBuff, "\n");
+}
 void fullServo::write(int val)
 {
   parallax.write(val);
 }
 
-void fullServo::rotate(int degree)
+void fullServo::rotateTo(int degree)
 {
   target = degree;
 }
