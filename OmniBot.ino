@@ -8,6 +8,8 @@
 //### BLUETOOTH MAC ADDRESS
 char * mac = "14:C2:13:14:9C:7D";
 
+#define UPDATEFRAME 20    // 1000 / hz = UPDATEFRAME
+
 //### DEBUG SETTINGS
 #define DEBUG // comment out for no serial interface
 
@@ -16,7 +18,7 @@ char * mac = "14:C2:13:14:9C:7D";
 char deBuff[BUFFSIZE];
 #endif
 
-//### ATTACHED SWERVEDRIVES:
+//### DEFINE SWERVEDRIVES:
 
 // swerveDrive(int servopin, int servofeedback,int timerID, int angleOffset, int motorpin)
 SwerveDrive module = SwerveDrive(26, 35, 0, 0, 25);
@@ -79,18 +81,15 @@ void loop() {
   if (PS4.isConnected()) input = updateByPS4();
   else zeroInput();
 
-  if (millis() > updatetimer + 20)
+  if (millis() > updatetimer + UPDATEFRAME)
   {
     // convert controller input (vectors) to euclidians
     float rotation = atan2(input.y, input.x);
     float magnitude = sqrt(sq(input.x) + sq(input.y));
 
     // update the module
-    module.input(rotation, magnitude);
-
-#ifdef DEBUG
-    printDebug();
-#endif
+    //module.input(rotation, magnitude);
+    module.input(input.x, input.y, input.r);
 
     updatetimer = millis();
   }

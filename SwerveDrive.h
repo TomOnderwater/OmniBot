@@ -10,10 +10,11 @@ class SwerveDrive : public fullServo
 {
   public:
   SwerveDrive(int s_pin, int f_pin, int t_ID, int _angleOffset, int m_pin);
-  void input(float rot, float mag);
+  void input(int x, int y, int r);
   void setAngleOffset(int _angleOffset);
   void setRotationCenter(int x, int y);
   void place(int x, int y);
+  void setSpeed(float _spd);
   
   private:
   // variables
@@ -21,11 +22,15 @@ class SwerveDrive : public fullServo
   bool reversed;
   int cx, cy; //rotation point
   int px, py; //physical location
+  int rot, mag; // derived from input
+  float mySpeed;
   // objects
   Servo motor;
   // functions
   int getRelativeAngle(int a, int b);
+  void calcResponse(int x, int y, int r);
   void moveMotor(int spd);
+  int radToDeg(float a);
 };
 
 #endif
