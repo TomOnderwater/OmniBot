@@ -15,15 +15,20 @@ class SwerveDrive : public fullServo
   void setRotationCenter(int x, int y);
   void place(int x, int y);
   void setSpeed(float _spd);
+  void setRotationSpeed(float _spd);
   
   private:
   // variables
   int angleOffset;
   bool reversed;
+  //bool slowMode;
+  const int motorNeutral = 58;
   int cx, cy; //rotation point
   int px, py; //physical location
   int rot, mag; // derived from input
-  float mySpeed;
+  float xRotationMultiplier, yRotationMultiplier;
+  float rotationSpeed, translationSpeed;
+
   // objects
   Servo motor;
   // functions

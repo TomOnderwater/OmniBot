@@ -17,6 +17,8 @@ class fullServo
   void write(int val);
   int move();
   void getDiagnostics(char * deBuff);
+  int getAngle();
+  int getTurns();
   
   private:
   byte fpin;

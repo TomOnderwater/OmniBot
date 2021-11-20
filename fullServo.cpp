@@ -26,6 +26,16 @@ fullServo::fullServo(byte s_pin, byte f_pin, int t)
 
 }
 
+int fullServo::getTurns()
+{
+  return turns;
+}
+
+int fullServo::getAngle()
+{
+  return angle;
+}
+
 int fullServo::getfPin()
 {
   return fpin;
@@ -118,11 +128,11 @@ void fullServo::moveToTarget()
 
 void fullServo::getDiagnostics(char * deBuff)
 {
-   strcat(deBuff, "target: ");
-   itoa(target, (char *) &deBuff + strlen(deBuff), 10);
-   strcat(deBuff, " angle: ");
-   itoa(angle, (char *) &deBuff + strlen(deBuff), 10);
-   strcat(deBuff, "\n");
+  strcat(deBuff, "target: ");
+  itoa(target, (char *) &deBuff + strlen(deBuff), 10);
+  strcat(deBuff, " angle: ");
+  itoa(angle, (char *) &deBuff + strlen(deBuff), 10);
+  strcat(deBuff, "\n");
 }
 void fullServo::write(int val)
 {

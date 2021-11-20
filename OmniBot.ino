@@ -1,12 +1,26 @@
-#include <PS4Controller.h>
 #include "ButtonMaker.h"
 #include "SwerveDrive.h"
 //#include "fullServo.h"
 #include <Arduino.h>
 #include <AsyncTimer.h>
 
+//### SELECT YOUR INPUT METHOD
+//#define PS4INPUT
+#define APINPUT
+
+#ifdef PS4INPUT
+#include <PS4Controller.h>
 //### BLUETOOTH MAC ADDRESS
 char * mac = "14:C2:13:14:9C:7D";
+#endif
+
+#ifdef APINPUT
+#include <ArduinoWebsockets.h>
+#include <WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include "config.h"
+#include "web.h"
+#endif
 
 #define UPDATEFRAME 20    // 1000 / hz = UPDATEFRAME
 
@@ -21,7 +35,7 @@ char deBuff[BUFFSIZE];
 //### DEFINE SWERVEDRIVES:
 
 // swerveDrive(int servopin, int servofeedback,int timerID, int angleOffset, int motorpin)
-SwerveDrive module = SwerveDrive(26, 35, 0, 0, 25);
+SwerveDrive module = SwerveDrive(26, 35, 0, 0, 12);
 
 struct controls
 {
@@ -43,11 +57,21 @@ void isr(void* arg) {
 void setup() {
   t.setup(); // init async timer
   zeroInput(); //STOP EVERYTHING
-#ifdef DEBUG
+
   Serial.begin(115200);
+
+#ifdef DEBUG
   emptyDeBuff();
 #endif
+
+#ifdef APINPUT
+  configureAP();
+#endif
+
+
+#ifdef PS4INPUT
   PS4.begin(mac);
+#endif
 
   //### SETUP OF MODULES BEGIN
   module.setAccuracy(2);  // fault tolerance
@@ -60,6 +84,9 @@ void setup() {
 
   //### set the rotation center
   module.setRotationCenter(0, 0);
+
+  //### continuos counting of turns
+ // module.setContinuous(false);
 
   //## SETUP OF MODULES END
 
@@ -78,23 +105,45 @@ void setup() {
 
 void loop() {
   // check connection to controller
+#ifdef PS4INPUT
   if (PS4.isConnected()) input = updateByPS4();
   else zeroInput();
+#endif
 
+#ifdef APINPUT
+  auto client = server.accept();
+  client.onMessage(handle_message);
+  while (client.available()) {
+    client.poll();
+    updateBot();
+  }
+#elif
+  updateBot();
+#endif
+
+
+}
+
+void updateBot()
+{
   if (millis() > updatetimer + UPDATEFRAME)
   {
     // convert controller input (vectors) to euclidians
-    float rotation = atan2(input.y, input.x);
-    float magnitude = sqrt(sq(input.x) + sq(input.y));
+    //float rotation = atan2(input.y, input.x);
+    //float magnitude = sqrt(sq(input.x) + sq(input.y));
 
     // update the module
     //module.input(rotation, magnitude);
     module.input(input.x, input.y, input.r);
 
+//    Serial.print("X: ");
+//    Serial.print(input.x);
+//    Serial.print(" Y: )");
+//    Serial.println(input.y);
+
     updatetimer = millis();
   }
 }
-
 void zeroInput()
 {
   input.x = 0;
@@ -102,6 +151,8 @@ void zeroInput()
   input.r = 0;
 }
 
+
+#ifdef PS4INPUT
 struct controls updateByPS4() {
   struct controls res;
 
@@ -121,6 +172,7 @@ struct controls updateByPS4() {
 
   return res;
 }
+#endif
 /*
   if (PS4.L2()) speedBackward = PS4.L2Value();
   else speedBackward = 0;
