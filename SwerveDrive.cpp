@@ -9,6 +9,8 @@ SwerveDrive::SwerveDrive(int s_pin, int f_pin, int t_ID, int _angleOffset, int m
   angleOffset = _angleOffset;
   translationSpeed = 0.1;
   rotationSpeed = 0.05;
+  reversed = false;
+  reverseOffset = 0;
 
   ESP32PWM::allocateTimer(t_ID + 1);
   motor.setPeriodHertz(50);
@@ -19,11 +21,11 @@ SwerveDrive::SwerveDrive(int s_pin, int f_pin, int t_ID, int _angleOffset, int m
 void SwerveDrive::input(int x, int y, int r)
 {
   calcResponse(x, y, r);  //update rot and mag
-  
+
   //call the fullServo functions here (rot)
   this->rotateTo(rot); // set the target
   int spdOffset = this->move(); // returns movement induced by rotating the axis along a fixed gear
-  
+
   //measure actual speed of the wheel here
 
   // PID control here
@@ -40,25 +42,35 @@ void SwerveDrive::calcResponse(int x, int y, int r)
   // combine rotation and translation in one vector
   int xmag = x + round(r * xRotationMultiplier);
   int ymag = y + round(r * yRotationMultiplier);
-
-  // convert the vector to euclidians
-  int targetangle = radToDeg(atan2(xmag, ymag)) + angleOffset; // target
-  int dist = getRelativeAngle(getAngle(), targetangle);
-
-  if (dist < 180) rot = getAngle() + dist;
-  else rot = getAngle() - (360 - dist);
-  
-//  Serial.print("angle: ");
-//  Serial.print(getAngle());
-//  Serial.print(" target: ");
-//  Serial.print(targetangle);
-//  Serial.print("relative angle: ");
-//  Serial.print(dist);
-//  Serial.print(" rot: ");
-//  Serial.println(rot);
-//  Serial.println();
-  
   mag = round(sqrt(sq(xmag) + sq(ymag)) * translationSpeed);
+
+  // only if there is relevant input
+  if (abs(mag) > 0)
+  {
+    // convert the vector to euclidians
+    int controllerAngle = radToDeg(atan2(xmag, ymag));
+    int targetangle = controllerAngle + angleOffset + reverseOffset; // target
+    // left hand turn distance
+    int dist = getRelativeAngle(getAngle(), targetangle);
+
+    // magnitude flips
+    // if further than a quarter turn, reversing would be faster
+    if (dist > 90 && dist < 270)
+  {
+    //Serial.println("reversing");
+    reversed = !reversed;
+    if (reversed)
+      {
+        reverseOffset = 180;
+        dist = getRelativeAngle(getAngle(), targetangle + reverseOffset);
+      }
+      else reverseOffset = 0;
+    }
+
+    if (dist < 180) rot = getAngle() + dist;
+    else rot = getAngle() - (360 - dist);
+    }
+if (reversed) mag *= -1;
 }
 
 void SwerveDrive::moveMotor(int spd)
@@ -102,5 +114,6 @@ int SwerveDrive::radToDeg(float a)
 // returns the (left hand) rotation distance between two angles
 int SwerveDrive::getRelativeAngle(int a, int b)
 {
-  return ((180 - a) + (180 + b)) % 360;
+  return ((360 - (a % 360)) + (b % 360)) % 360;
+  //return (((180 - a) % 360) + ((180 + b) % 360)) % 360;
 }

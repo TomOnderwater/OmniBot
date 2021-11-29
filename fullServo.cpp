@@ -41,11 +41,6 @@ int fullServo::getfPin()
   return fpin;
 }
 
-int fullServo::Angle()
-{
-  return angle;
-}
-
 void fullServo::setKp(float _Kp) {
   Kp = _Kp;
 }

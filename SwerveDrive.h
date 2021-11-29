@@ -21,6 +21,7 @@ class SwerveDrive : public fullServo
   // variables
   int angleOffset;
   bool reversed;
+  int reverseOffset;
   //bool slowMode;
   const int motorNeutral = 58;
   int cx, cy; //rotation point
@@ -28,6 +29,7 @@ class SwerveDrive : public fullServo
   int rot, mag; // derived from input
   float xRotationMultiplier, yRotationMultiplier;
   float rotationSpeed, translationSpeed;
+  //int reversed;
 
   // objects
   Servo motor;

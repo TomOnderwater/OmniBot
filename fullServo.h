@@ -11,7 +11,6 @@ class fullServo
   void setKp(float _Kp);
   void rotateTo(int degree);
   void setAccuracy(int _treshold);
-  int Angle();
   void feedback();
   int getfPin();
   void write(int val);
