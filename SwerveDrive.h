@@ -26,7 +26,8 @@ class SwerveDrive : public fullServo
   const int motorNeutral = 58;
   int cx, cy; //rotation point
   int px, py; //physical location
-  int rot, mag; // derived from input
+  long rot;
+  int mag; // derived from input
   float xRotationMultiplier, yRotationMultiplier;
   float rotationSpeed, translationSpeed;
   //int reversed;
@@ -34,7 +35,8 @@ class SwerveDrive : public fullServo
   // objects
   Servo motor;
   // functions
-  int getRelativeAngle(int a, int b);
+  //int getRelativeAngle(int a, int b);
+  int getRelativeAngle(long a, long b);
   void calcResponse(int x, int y, int r);
   void moveMotor(int spd);
   int radToDeg(float a);

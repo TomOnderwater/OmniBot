@@ -35,9 +35,9 @@ char deBuff[BUFFSIZE];
 //### DEFINE SWERVEDRIVES:
 
 // swerveDrive(int servopin, int servofeedback,int timerID, int angleOffset, int motorpin)
-SwerveDrive module = SwerveDrive(26, 35, 0, 0, 12);
-SwerveDrive module2 = SwerveDrive(25, 34, 2, 0, 13);
-SwerveDrive module3 = SwerveDrive(33, 39, 4, 0, 14);
+SwerveDrive module = SwerveDrive(13, 32, 0, 0, 5);
+//SwerveDrive module2 = SwerveDrive(25, 34, 2, 0, 13);
+//SwerveDrive module3 = SwerveDrive(33, 39, 4, 0, 14);
 
 struct controls
 {
@@ -77,23 +77,23 @@ void setup() {
 
   //### SETUP OF MODULES BEGIN
   module.setAccuracy(2);  // fault tolerance
-  module2.setAccuracy(2);
-  module3.setAccuracy(2);
+  //module2.setAccuracy(2);
+  //module3.setAccuracy(2);
 
   //### attach interrupts to the swervedrive modules:
   attachInterruptArg(module.getfPin(), isr, &module, CHANGE);
-  attachInterruptArg(module2.getfPin(), isr, &module2, CHANGE);
-  attachInterruptArg(module3.getfPin(), isr, &module3, CHANGE);
+  //attachInterruptArg(module2.getfPin(), isr, &module2, CHANGE);
+  //attachInterruptArg(module3.getfPin(), isr, &module3, CHANGE);
 
   //### place the modules in space
   module.place(0, 0);
-  module2.place(0, 0);
-  module3.place(0, 0);
+  //module2.place(0, 0);
+  //module3.place(0, 0);
 
   //### set the rotation center
   module.setRotationCenter(0, 0);
-  module2.setRotationCenter(0, 0);
-  module3.setRotationCenter(0, 0);
+  //module2.setRotationCenter(0, 0);
+  //module3.setRotationCenter(0, 0);
 
   //### continuos counting of turns
  // module.setContinuous(false);
@@ -145,6 +145,7 @@ void updateBot()
     // update the module
     //module.input(rotation, magnitude);
     module.input(input.x, input.y, input.r);
+    //Serial.println(module.getAngle());
     //module2.input(input.x, input.y, input.r);
     //module3.input(input.x, input.y, input.r);
 

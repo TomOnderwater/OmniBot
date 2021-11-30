@@ -25,7 +25,8 @@ void SwerveDrive::input(int x, int y, int r)
   //call the fullServo functions here (rot)
   this->rotateTo(rot); // set the target
   int spdOffset = this->move(); // returns movement induced by rotating the axis along a fixed gear
-
+  //Serial.println(this->getAngle());
+  Serial.println(this->logSpeed());
   //measure actual speed of the wheel here
 
   // PID control here
@@ -49,9 +50,9 @@ void SwerveDrive::calcResponse(int x, int y, int r)
   {
     // convert the vector to euclidians
     int controllerAngle = radToDeg(atan2(xmag, ymag));
-    int targetangle = controllerAngle + angleOffset + reverseOffset; // target
+    long targetangle = controllerAngle + angleOffset + reverseOffset; // target
     // left hand turn distance
-    int dist = getRelativeAngle(getAngle(), targetangle);
+    int dist = getRelativeAngle(this->getAngle(), targetangle);
 
     // magnitude flips
     // if further than a quarter turn, reversing would be faster
@@ -62,13 +63,13 @@ void SwerveDrive::calcResponse(int x, int y, int r)
     if (reversed)
       {
         reverseOffset = 180;
-        dist = getRelativeAngle(getAngle(), targetangle + reverseOffset);
+        dist = getRelativeAngle(this->getAngle(), targetangle + reverseOffset);
       }
       else reverseOffset = 0;
     }
 
-    if (dist < 180) rot = getAngle() + dist;
-    else rot = getAngle() - (360 - dist);
+    if (dist < 180) rot = this->getAngle() + dist;
+    else rot = this->getAngle() - (360 - dist);
     }
 if (reversed) mag *= -1;
 }
@@ -109,11 +110,15 @@ void SwerveDrive::setAngleOffset(int _angleOffset)
 
 int SwerveDrive::radToDeg(float a)
 {
-  return round(a * 57.2957795131);
+  return round(a * 57.2957f);
+}
+int SwerveDrive::getRelativeAngle(long a, long b)
+{
+  return (b - a) % 360;
 }
 // returns the (left hand) rotation distance between two angles
-int SwerveDrive::getRelativeAngle(int a, int b)
+/*int SwerveDrive::getRelativeAngle(int a, int b)
 {
-  return ((360 - (a % 360)) + (b % 360)) % 360;
+  return ((720 - (a % 360)) + (b % 360)) % 360;
   //return (((180 - a) % 360) + ((180 + b) % 360)) % 360;
-}
+}*/

@@ -16,24 +16,65 @@ fullServo::fullServo(byte s_pin, byte f_pin, int t)
 
   pinMode(f_pin, INPUT_PULLUP);
 
+  // PID settings
+  _p = 1.3f;
+  _i = 0.01f;
+  _d = 3.0f;
+  _b = 0.3f; //boost
+
   fpin = f_pin;
+  angleSpeed = 0;
+  angle = 0;
   Kp = 1.0;
   target = 0;
   errorsum = 0;
+  maxError = 40 * round((1.0f / _i));
   cycleState = 0;
 
-  //attachInterruptArg(f_pin, isr, this, CHANGE); // this works only 50% of the time
+  clearLog();
+
+  //attachInterruptArg(f_pin, isr, this, CHANGE); // don't use static interrupt in class, will bug out the memory. this works only 50% of the time
 
 }
 
+void fullServo::clearLog()
+{
+  for (int i = 0; i < 6; i++) {
+    speedLog[i] = 0;
+  }
+}
+
+void fullServo::addLog()
+{
+  for (int i = 0; i < 5; i++)
+  {
+    speedLog[i] = speedLog[i + 1];
+  }
+  speedLog[5] = angleSpeed;
+}
+
+float fullServo::calcAVGSpeed()
+{
+  float sum = 0;
+  for (int i = 0; i < 6; i++)
+  {
+    sum += speedLog[i];
+  }
+  return sum / 6;
+}
+
+float fullServo::logSpeed()
+{
+  return speedAVG;
+}
+
+int fullServo::getAngleSpeed()
+{
+  return angleSpeed;
+}
 int fullServo::getTurns()
 {
   return turns;
-}
-
-int fullServo::getAngle()
-{
-  return angle;
 }
 
 int fullServo::getfPin()
@@ -75,16 +116,23 @@ void fullServo::updateAngle()
       turns++;
     else if ((thetaPre < q2min) && (theta > q3max))
       turns--;
-
+    pAngle = angle;
     if (turns >= 0)
       angle = (turns * unitsFC) + theta;
     else if (turns < 0)
       angle = ((turns + 1) * unitsFC) - (unitsFC - theta);
 
     thetaPre = theta;
-
+    angleSpeed = angle - pAngle;
+    addLog();
+    speedAVG = calcAVGSpeed();
     cycleState = 0; //reset measurement cycle
   }
+}
+
+long fullServo::getAngle()
+{
+  return angle;
 }
 
 int fullServo::move()
@@ -99,28 +147,32 @@ void fullServo::moveToTarget()
 {
   int diff = angle - target;
 
-  if (abs(diff) < treshold)
+  parallax.write(90 + calcPid(diff));
+}
+
+int fullServo::calcPid(int diff)
+{
+  if (abs(diff) < treshold * 3) //if nearly on target
   {
-    parallax.write(90); // no movement
-    errorsum = 0;
-  }
-  else if (diff < 0)
-  {
-    //turn left
-    //errorsum += diff * 0.01;
-    //if (diff < 45) errorsum += (float) diff * 0.01;
-    diff = constrain(abs(diff), 0, 80);
-    if (diff < 15) errorsum += (float)diff * 0.01;
-    parallax.write(90 - (diff + round(errorsum)));
+    if (abs(diff) < treshold) //if really on target
+    {
+      errorsum = 0; //stop _i from doing unnecessary stuff
+      return constrain(round(_b * speedAVG * angleSpeed), -90, 90); // LESSER BOOST
+    }
+    return constrain(round(_b * speedAVG), -90, 90); //BOOST STOP
   }
   else
   {
-    diff = constrain(abs(diff), 0, 80);
-    if (diff < 15) errorsum += (float)diff * 0.01;
-    parallax.write(90 + (diff + round(errorsum)));
+    errorsum += diff;
+    errorsum = constrain(errorsum, -maxError, maxError);
+    int response = round(_p * diff);
+    response += round(_i * errorsum);
+    response += round(_d * angleSpeed);
+    //response += round(_b * speedAVG);
+    response = constrain(response, -90, 90);
+    return response;
   }
 }
-
 void fullServo::getDiagnostics(char * deBuff)
 {
   strcat(deBuff, "target: ");
@@ -134,7 +186,7 @@ void fullServo::write(int val)
   parallax.write(val);
 }
 
-void fullServo::rotateTo(int degree)
+void fullServo::rotateTo(long degree)
 {
   target = degree;
 }
